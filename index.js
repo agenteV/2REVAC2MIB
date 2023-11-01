@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
  
 //configurando o roteamento para teste no postman
 const app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 const port = 3000;
  
 //configurando o acesso ao mongodb
@@ -34,8 +34,20 @@ app.post("/cadastrousuario", async(req, res)=>{
     const endereco = req.body.endereco;
     const numero = req.body.numero;
     const cep  = req.body.cep;
-    const nascimento = req.body.nascimento
- 
+    const nascimento = req.body.nascimento;
+    
+    //validação dos campos
+    if(nome == null || email == null || endereco == null || numero == null || cep == null || nascimento == null){
+        return res.status(400).json({error : "Preencher todos os campos"});
+    }
+
+    //teste de duplicidade
+    const emailExiste  = await Usuario.findOne({email : email});
+    
+    if(emailExiste){
+        return res.status(400).json({error : "O email informado já existe!"});
+    }
+
     const usuario = new Usuario({
         nome : nome,
         email : email,
@@ -52,11 +64,15 @@ app.post("/cadastrousuario", async(req, res)=>{
        }
  
 });
- 
+
+app.get("/cadastrousuario", async(req, res)=>{
+    res.sendFile(__dirname +"/cadastrousuario.html");
+})
+
 app.get("/", async(req, res)=>{
     res.sendFile(__dirname +"/index.html");
 })
- 
+
 //configurando a porta
 app.listen(port, ()=>{
     console.log(`Servidor rodando na porta ${port}`);
